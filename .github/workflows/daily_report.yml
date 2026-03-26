@@ -4,8 +4,6 @@ on:
   schedule:
     # 香港时间晚上 8:30 = 12:30 UTC (美股开盘前 1 小时)
     - cron: '30 12 * * 1-5'
-    # 香港时间早上 8:00 = 00:00 UTC (起床后查看美股收盘)
-    - cron: '0 0 * * 1-5'
   workflow_dispatch:
 
 jobs:
