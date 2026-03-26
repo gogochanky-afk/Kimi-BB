@@ -2,12 +2,10 @@ name: Daily Market Report
 
 on:
   schedule:
-    # 年年天料个前开号 天教个取 8:30 AM = 00:30 UTC
-    - cron: '30 0 * * 1-5'
-    # 天教个取 10:00 AM = 02:00 UTC
-    - cron: '0 2 * * 1-5'
-    # 天教个取@ Event Trigger 评估诈罪理累计桟化，校售分桟
-    - cron: '0 6 * * 1-5' # 天教个取 2:00 PM = 06:00 UTC
+    # 香港时间晚上 8:30 = 12:30 UTC (美股开盘前 1 小时)
+    - cron: '30 12 * * 1-5'
+    # 香港时间早上 8:00 = 00:00 UTC (起床后查看美股收盘)
+    - cron: '0 0 * * 1-5'
   workflow_dispatch:
 
 jobs:
