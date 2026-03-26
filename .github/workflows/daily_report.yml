@@ -6,6 +6,8 @@ on:
     - cron: '30 0 * * 1-5'
     # 天教个取 10:00 AM = 02:00 UTC
     - cron: '0 2 * * 1-5'
+    # 天教个取@ Event Trigger 评估诈罪理累计桟化，校售分桟
+    - cron: '0 6 * * 1-5' # 天教个取 2:00 PM = 06:00 UTC
   workflow_dispatch:
 
 jobs:
