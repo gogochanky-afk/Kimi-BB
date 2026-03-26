@@ -1,0 +1,33 @@
+name: Daily Market Report
+
+on:
+  schedule:
+    # 年年天料个前开号 天教个取 8:30 AM = 00:30 UTC
+    - cron: '30 0 * * 1-5'
+    # 天教个取 10:00 AM = 02:00 UTC
+    - cron: '0 2 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install yfinance pandas
+    
+    - name: Run market report
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
+      run: |
+        python market_report.py
