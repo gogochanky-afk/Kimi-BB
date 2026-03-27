@@ -1,9 +1,11 @@
-name: Hugo Sammie Family Office v2
+name: Hugo Sammie Family Office v3
 
 on:
   schedule:
     # 香港时间早上 7:45 = 前一天 23:45 UTC (家庭日程)
     - cron: '45 23 * * *'
+    # 香港时间早上 9:00 = 01:00 UTC (全球晨報)
+    - cron: '0 1 * * *'
     # 香港时间晚上 8:30 = 12:30 UTC (美股盘前简报)
     - cron: '30 12 * * 1-5'
     # 香港时间晚上 10:30 = 14:30 UTC (开盘机会检查)
@@ -27,6 +29,22 @@ jobs:
         TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
       run: python schedule_report.py
 
+  # 早上 9:00：全球晨报
+  news_report:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 1 * * *' || github.event_name == 'workflow_dispatch'
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: 推送全球晨报
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
+      run: python news_report.py
+
   # 晚上 8:30：盘前简报
   premarket_report:
     runs-on: ubuntu-latest
@@ -45,7 +63,7 @@ jobs:
         TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
       run: python market_monitor_v2.py premarket
 
-  # 晚上 10:30：机会检查（有条件推送）
+  # 晚上 10:30：机会检查
   opportunity_check:
     runs-on: ubuntu-latest
     if: github.event.schedule == '30 14 * * 1-5' || github.event_name == 'workflow_dispatch'
