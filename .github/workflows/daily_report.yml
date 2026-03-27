@@ -1,31 +1,44 @@
-name: Daily Market Report
+name: Hugo Sammie Family Office Daily
 
 on:
   schedule:
-    # 香港时间晚上 8:30 = 12:30 UTC (美股开盘前 1 小时)
+    # 香港时间早上 8:00 = 00:00 UTC (孩子日程)
+    - cron: '0 0 * * 1-7'
+    # 香港时间晚上 8:30 = 12:30 UTC (美股盤前)
     - cron: '30 12 * * 1-5'
   workflow_dispatch:
 
 jobs:
-  build:
+  schedule_report:
     runs-on: ubuntu-latest
-    
+    if: github.event.schedule == '0 0 * * 1-7' || github.event_name == 'workflow_dispatch'
     steps:
     - uses: actions/checkout@v3
-    
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-    
+    - name: Run schedule report
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
+      run: python schedule_report.py
+
+  market_report:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 12 * * 1-5' || github.event_name == 'workflow_dispatch'
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
     - name: Install dependencies
-      run: |
-        pip install yfinance pandas
-    
+      run: pip install yfinance pandas
     - name: Run market report
       env:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
-      run: |
-        python market_report.py
+      run: python market_report.py
