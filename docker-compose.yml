@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # OpenClaw Gateway - 核心網關
+  gateway:
+    image: openclaw/gateway:latest
+    container_name: openclaw-gateway
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - GATEWAY_PORT=3000
+      - GATEWAY_SECRET=${GATEWAY_SECRET}
+      - SESSION_KEY=${SESSION_KEY}
+      - LOG_LEVEL=info
+    networks:
+      - openclaw-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Python Agent - 執行代理
+  agent:
+    image: openclaw/agent-python:latest
+    container_name: openclaw-agent
+    restart: always
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./skills:/app/skills
+      - ./workspace:/app/workspace
+    environment:
+      - GATEWAY_URL=http://gateway:3000
+      - WORKSPACE=/app/workspace
+      - MEMORY_DIR=/app/data/memory
+      - LOG_LEVEL=info
+      - KIMI_API_KEY=${KIMI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    networks:
+      - openclaw-network
+    depends_on:
+      gateway:
+        condition: service_healthy
+
+  # Nginx 反向代理 + SSL
+  nginx:
+    image: nginx:alpine
+    container_name: openclaw-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - openclaw-network
+    depends_on:
+      - gateway
+
+  # Redis - 會話緩存（可選）
+  redis:
+    image: redis:7-alpine
+    container_name: openclaw-redis
+    restart: always
+    volumes:
+      - redis-data:/data
+    networks:
+      - openclaw-network
+
+  # PostgreSQL - 數據持久化（可選）
+  postgres:
+    image: postgres:16-alpine
+    container_name: openclaw-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=openclaw
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=openclaw
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - openclaw-network
+
+networks:
+  openclaw-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  postgres-data:
