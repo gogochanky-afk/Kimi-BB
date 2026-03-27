@@ -1,0 +1,6 @@
+[project]
+name = "kimi-bb"
+version = "1.0.0"
+description = "Hugo Sammie Family Office Automation"
+requires-python = ">=3.9"
+dependencies = []
