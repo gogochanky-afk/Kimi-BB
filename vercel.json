@@ -3,7 +3,7 @@
   "builds": [
     {
       "src": "api/*.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python@3.0.7"
     }
   ],
   "routes": [
@@ -13,25 +13,10 @@
     }
   ],
   "crons": [
-    {
-      "path": "/api/schedule_report",
-      "schedule": "45 23 * * *"
-    },
-    {
-      "path": "/api/news_report",
-      "schedule": "0 1 * * *"
-    },
-    {
-      "path": "/api/premarket_report",
-      "schedule": "30 12 * * 1-5"
-    },
-    {
-      "path": "/api/opportunity_check",
-      "schedule": "30 14 * * 1-5"
-    },
-    {
-      "path": "/api/reading_report",
-      "schedule": "0 2 * * 0"
-    }
+    {"path": "/api/schedule_report", "schedule": "45 23 * * *"},
+    {"path": "/api/news_report", "schedule": "0 1 * * *"},
+    {"path": "/api/premarket_report", "schedule": "30 12 * * 1-5"},
+    {"path": "/api/opportunity_check", "schedule": "30 14 * * 1-5"},
+    {"path": "/api/reading_report", "schedule": "0 2 * * 0"}
   ]
 }
