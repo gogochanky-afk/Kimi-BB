@@ -1,9 +1,11 @@
-name: Hugo Sammie Family Office v4
+name: Hugo Sammie Family Office v5
 
 on:
   schedule:
     # 香港时间早上 7:45 = 前一天 23:45 UTC (家庭日程)
     - cron: '45 23 * * *'
+    # 香港时间早上 8:00 = 00:00 UTC (個人每日智識)
+    - cron: '0 0 * * *'
     # 香港时间早上 9:00 = 01:00 UTC (全球晨報)
     - cron: '0 1 * * *'
     # 香港时间晚上 8:30 = 12:30 UTC (美股盘前简报)
@@ -30,6 +32,22 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
       run: python schedule_report.py
+
+  # 早上 8:00：個人每日智識
+  daily_wisdom:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 0 * * *' || github.event_name == 'workflow_dispatch'
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: 推送每日智識
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
+      run: python daily_wisdom.py
 
   # 早上 9:00：全球晨报
   news_report:
