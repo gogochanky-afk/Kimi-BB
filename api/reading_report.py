@@ -1,0 +1,29 @@
+from http.server import BaseHTTPRequestHandler
+import json, urllib.request, urllib.parse, os
+from datetime import datetime
+
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
+GROUP_ID = os.environ.get('TELEGRAM_GROUP_ID', '-5153249366')
+
+def send_telegram(message, chat_id):
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        data = urllib.parse.urlencode({'chat_id': chat_id, 'text': message, 'parse_mode': 'HTML'}).encode()
+        req = urllib.request.Request(url, data=data, method='POST')
+        with urllib.request.urlopen(req, timeout=30) as response:
+            return json.loads(response.read().decode()).get('ok', False)
+    except Exception as e:
+        return False
+
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        lines = ["📚 <b>全家阅读计划 | 周日</b>", "", "🎯 本周推荐", "• 安排亲子阅读时间", "• 推荐适合全家阅读的书籍", "", "⏰ 下周预告", "• 周一 7:45 AM - 家庭日程", "• 周一至周五晚上 - 美股简报", "", "<i>— Hugo Sammie 家族办公室</i>"]
+        report = "\n".join(lines)
+        send_telegram(report, CHAT_ID)
+        send_telegram(report, GROUP_ID)
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'status': 'success'}).encode())
+    def do_POST(self): return self.do_GET()
