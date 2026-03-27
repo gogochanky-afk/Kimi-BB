@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Hugo Sammie 家族日程自動推送
-每天早上 8:00 發送當日行程
+Hugo Sammie 家族日程自動推送 v2
+每天早上 7:45 發送當日行程（私人群組雙推送）
 """
 
 import json
@@ -12,7 +12,8 @@ from datetime import datetime
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-GROUP_ID = os.getenv('TELEGRAM_GROUP_ID')
+# 如果環境變量沒有，使用硬編碼群組 ID
+GROUP_ID = os.getenv('TELEGRAM_GROUP_ID', '-5153249366')
 
 def send_telegram(message, chat_id):
     try:
@@ -31,44 +32,80 @@ def send_telegram(message, chat_id):
         return False
 
 def get_schedule():
-    weekday = datetime.now().weekday()  # 0=Monday
-    schedules = {
-        0: "📅 星期一\n• 女兒校隊至 5:00 PM\n• 中國樂器 6:45-8:00 PM\n• 🔔 提醒：6:15 PM 準備出門",
-        1: "📅 星期二\n• 大女兒校隊至 5:00 PM\n• 晚上自由時間\n• 💡 建議：親子閱讀或家庭遊戲",
-        2: "📅 星期三（半天）\n• 1:00 PM 放學到家\n• 法文堂 / 編程堂 / 數學堂\n• ⚠️ 注意：課外班多，記得準備點心",
-        3: "📅 星期四\n• 大女兒校隊至 5:00 PM\n• 晚上自由時間",
-        4: "📅 星期五\n• 網球 4:00-5:00 PM\n• 週末前準備\n• 🎉 明天週末了！",
-        5: "📅 星期六\n• 週末休息模式\n• 💡 建議：AI閱讀 / 親子活動 / 戶外\n• 小紅書：週末早晨儀式主題",
-        6: "📅 星期日\n• 週末休息模式\n• 💡 建議：家庭聚餐 / 下週準備\n• 小紅書：週日晚安/下週預覽主題"
-    }
-    return schedules.get(weekday, "📅 今日日程")
-
-def generate_report():
-    today = datetime.now().strftime('%Y年%m月%d日')
+    """獲取當日日程"""
+    today = datetime.now()
+    weekday = today.weekday()
+    date_str = today.strftime('%m月%d日')
     weekday_names = ['一', '二', '三', '四', '五', '六', '日']
-    weekday = weekday_names[datetime.now().weekday()]
     
-    schedule = get_schedule()
+    # 日程表
+    schedules = {
+        0: {  # 星期一
+            'morning': '大女兒校隊至 5:00 PM',
+            'evening': '中國樂器 6:45-8:00 PM',
+            'note': '記得帶樂器'
+        },
+        1: {  # 星期二
+            'morning': '大女兒校隊至 5:00 PM',
+            'evening': '晚上自由時間',
+            'note': '可以安排家庭活動'
+        },
+        2: {  # 星期三
+            'morning': '半天課 (1:00 PM 放學)',
+            'afternoon': '法文/編程/數學堂',
+            'note': '接孩子時間較早'
+        },
+        3: {  # 星期四
+            'morning': '大女兒校隊至 5:00 PM',
+            'evening': '晚上自由時間',
+            'note': '檢查本週功課'
+        },
+        4: {  # 星期五
+            'morning': '正常上課',
+            'afternoon': '網球 4:00-5:00 PM',
+            'note': '帶網球裝備！'
+        },
+        5: {  # 星期六
+            'morning': '週末家庭時間',
+            'note': '可以安排戶外活動'
+        },
+        6: {  # 星期日
+            'morning': '週末休息',
+            'note': '準備下週，晚上有閱讀計劃推送'
+        }
+    }
     
-    lines = []
-    lines.append(f"📋 <b>Hugo Sammie 家族日報</b>")
-    lines.append(f"📅 {today} 星期{weekday}")
-    lines.append("")
-    lines.append("<b>【今日行程】</b>")
-    lines.append(schedule)
-    lines.append("")
-    lines.append("<b>【投資快訊】</b>")
-    lines.append("• 請查看盤前簡報 (晚上 8:30)")
-    lines.append("")
-    lines.append("<i>💬 需要協助請直接回覆小GoGo</i>")
-    
-    return "\n".join(lines)
+    return date_str, weekday_names[weekday], schedules.get(weekday, {})
 
 def main():
-    report = generate_report()
+    date_str, weekday, schedule = get_schedule()
+    
+    lines = []
+    lines.append(f"📋 <b>Hugo Sammie 家庭日程</b>")
+    lines.append(f"📅 {date_str} 星期{weekday}")
+    lines.append("")
+    
+    if 'morning' in schedule:
+        lines.append(f"🌅 上午：{schedule['morning']}")
+    if 'afternoon' in schedule:
+        lines.append(f"☀️ 下午：{schedule['afternoon']}")
+    if 'evening' in schedule:
+        lines.append(f"🌙 晚上：{schedule['evening']}")
+    
+    lines.append("")
+    lines.append(f"💡 <b>提醒：</b>{schedule.get('note', '')}")
+    lines.append("")
+    lines.append("<i>☕ 祝你有美好的一天！</i>")
+    
+    report = "\n".join(lines)
+    
+    # 推送到私人聊天
     send_telegram(report, CHAT_ID)
+    print(f"已推送到私人: {CHAT_ID}")
+    
+    # 推送到群組
     send_telegram(report, GROUP_ID)
-    print("日程推送完成")
+    print(f"已推送到群組: {GROUP_ID}")
 
 if __name__ == "__main__":
     main()
