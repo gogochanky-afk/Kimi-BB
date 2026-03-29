@@ -1,0 +1,32 @@
+name: Hugo Family Office - Daily Reports
+
+on:
+  schedule:
+    # 9:00 AM HK = 1:00 AM UTC (Mon-Fri)
+    - cron: '0 1 * * 1-5'
+    # 8:30 PM HK = 12:30 PM UTC (Mon-Fri)  
+    - cron: '30 12 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  stock-report:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install yfinance python-telegram-bot pandas requests
+    
+    - name: Generate and send report
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
+      run: python .github/scripts/stock_bot.py
